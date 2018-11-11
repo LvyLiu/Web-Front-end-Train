@@ -10,6 +10,7 @@ $(document).ready(function() {
     // @TODO
     // → → 特么移动端有鼠标吗就 mousemove ……
     // 请用 touchmove
+    // 试了一下还是哪里好像有点问题，改日继续
 
     //     document.onmousemove = function(eventUp) {
     //         var upMouse = eventUp.screenX;
@@ -17,10 +18,10 @@ $(document).ready(function() {
     //         var x = _eventUp.clientX - left; //box距离页面左边缘距离
     //         slideBar.style.left = x + "px";
     //         // if(downClick>upMouse){
-    //         // 	console.log("左滑");
+    //         //   console.log("左滑");
     //         // }
     //         // else{
-    //         // 	console.log("右滑");
+    //         //   console.log("右滑");
     //         // }
     //         slideBar.onmouseup = function() {
     //             document.onmousemove = null; //当鼠标弹起的时候窗口不跟随鼠标移动
@@ -30,53 +31,38 @@ $(document).ready(function() {
 
     // }
     var timeoutID;
+    var stop;
     var ImgPathArray = ['./img/slide1.jpeg', './img/slide2.jpeg', './img/slide3.jpeg', './img/slide4.jpeg', './img/slide5.jpeg'];
-    // var slideNum = 0;
 
-    /* question*/
-    //为什么下面那段代码不生效？
-
-    // function slideTimeCount() {
-    //     if (slideNum > 4) {
-    //         slideNum = 0;
-    //     }
-    //     $("#slideImg").attr('src', ImgPathArray[slideNum]);
-    //     slideNum++;
-    //     window.setTimeout(slideTimeCount(), 10000);
-    // }
-
-    // slideTimeCount();
-
-    // var li=document.getElementById('lunbo').getElementsByTagName("li");
     var num = 0;
     var beforeShowNum = 0;
     var len = ImgPathArray.length;
 
-    startPicAntimate();
-
     //开始轮播
-    function startPicAntimate() {
+    var startPicAntimate = function() {
+        // function startPicAntimate() {
 
         // @TODO
         // 这里就不扣分啦，但是好的做法是用 setTimeout 替换 setInterval
         // setInterval 有一些小坑，涉及事件循环队列的原理，一时说不清
         // 下次见面细讲吧
 
-        timeoutID = setInterval(function() {
+        // @TODO
+        // 但是这里要扣一分，你可以观察下，第一张图停了 6 秒才切
+        // num 的初始值应该是？
 
-            // @TODO
-            // 但是这里要扣一分，你可以观察下，第一张图停了 6 秒才切
-            // num 的初始值应该是？
+        setDisplayOrder(num, beforeShowNum);
+        num = ++num == len ? 0 : num;
 
-            setDisplayOrder(num, beforeShowNum);
-            num = ++num == len ? 0 : num;
-        }, 3000); //切换时间
+        // @REVIEW
+        timeoutID = setTimeout(startPicAntimate, 3000); //切换时间
     }
 
+    startPicAntimate();
 
     //li点击暂停5秒，继续轮播
     $("#slideUl li").click(function() {
-        window.clearInterval(timeoutID);
+        window.clearTimeout(timeoutID);
         var ind = $("#slideUl li").index(this);
         setDisplayOrder(ind, beforeShowNum);
 
@@ -84,11 +70,13 @@ $(document).ready(function() {
         // 扣一分，这里没做防抖处理
         // 你可以试着连续点击一个小点好多下，然后会很酸爽
 
-        setTimeout(function() {
+        // @REVIEW
+        if (stop) window.clearTimeout(stop);
+        stop = setTimeout(function() {
             num = ind;
             startPicAntimate();
         }, 2000);
-    })
+    });
 
     //设置图片的显示和li的样式
     function setDisplayOrder(now, before) {
@@ -106,11 +94,12 @@ $(document).ready(function() {
         // 但即使如此，每次切换时，显卡都会重新生成 texture，并且绑定新的显存的缓冲区
         // 需要改成常规做法，也用列表
 
-        $("#slideImg").attr('src', ImgPathArray[now]);
-        // $('#slideImg' + now).css('display', 'inline-block');
+        // @REVIEW
+        // 我不知道你说的改成列表是不是这个意思
+        $("#slideImg li").eq(now).css('display','inline-block')
         $("#slideUl li").eq(now).css('opacity', 1);
         if (before != now) {
-        	// $('#slideImg' + before).css('display', 'none');
+            $("#slideImg li").eq(before).css('display','none')
             $("#slideUl li").eq(before).css('opacity', 0.5);
         }
         beforeShowNum = now;
